@@ -256,6 +256,31 @@ const deleteFloodReport = async (id) => {
   if (error) throw error;
 };
 
+// ---- Flood Report Images (Supabase Storage) ---------------------------
+const FLOOD_IMAGES_BUCKET = 'flood-reports';
+
+// Idempotent — safe to call on every server start. Creates the public
+// bucket flood report photos live in if it doesn't exist yet.
+const ensureFloodImagesBucket = async () => {
+  const { data: buckets, error } = await supabaseAdmin.storage.listBuckets();
+  if (error) throw error;
+  if (buckets?.some((b) => b.name === FLOOD_IMAGES_BUCKET)) return;
+  const { error: createError } = await supabaseAdmin.storage.createBucket(FLOOD_IMAGES_BUCKET, {
+    public: true,
+    fileSizeLimit: '5MB',
+  });
+  if (createError) throw createError;
+};
+
+const uploadFloodReportImage = async (path, buffer, contentType) => {
+  const { error } = await supabaseAdmin.storage
+    .from(FLOOD_IMAGES_BUCKET)
+    .upload(path, buffer, { contentType, upsert: true });
+  if (error) throw error;
+  const { data } = supabaseAdmin.storage.from(FLOOD_IMAGES_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+};
+
 // ---- Notifications ---------------------------------------------------
 const getNotifications = async (userId, { unreadOnly = false, limit = 50 } = {}) => {
   let query = supabaseAdmin
@@ -355,6 +380,8 @@ module.exports = {
   getFloodReportById,
   updateFloodReport,
   deleteFloodReport,
+  ensureFloodImagesBucket,
+  uploadFloodReportImage,
   getNotifications,
   createNotification,
   markNotificationRead,

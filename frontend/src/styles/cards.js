@@ -165,6 +165,19 @@ const cardStyles = StyleSheet.create({
     marginBottom: spacing.sm,
     ...shadow,
   },
+  floodRow: {
+    flexDirection: 'row',
+  },
+  floodImage: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.md,
+    marginRight: spacing.sm,
+    backgroundColor: colors.primaryPale,
+  },
+  floodBody: {
+    flex: 1,
+  },
   floodHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

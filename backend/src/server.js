@@ -10,6 +10,7 @@ const logger = require('./utils/logger');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const newsService = require('./services/newsService');
 const notificationService = require('./services/notificationService');
+const supabaseService = require('./services/supabaseService');
 
 const authRoutes = require('./routes/authRoutes');
 const weatherRoutes = require('./routes/weatherRoutes');
@@ -69,6 +70,10 @@ if (env.nodeEnv !== 'test') {
 
   logger.info('Scheduled jobs registered: news refresh (every 6h), daily climate tips (07:00 Africa/Douala)');
 }
+
+supabaseService
+  .ensureFloodImagesBucket()
+  .catch((err) => logger.warn('Could not verify/create flood-reports storage bucket', { error: err.message }));
 
 app.listen(env.port, () => {
   logger.info(`Climate App API listening on port ${env.port} [${env.nodeEnv}]`);

@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const reportsController = require('../controllers/reportsController');
 const { requireAuth, attachUser } = require('../middleware/authMiddleware');
 const { validate } = require('../middleware/validation');
@@ -9,10 +10,12 @@ const {
 } = require('../validators/reportValidators');
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Verified reports are viewable by anyone (e.g. the public map); "mine" and
 // mutations require a logged-in citizen.
 router.get('/mine', requireAuth, reportsController.myReports);
+router.post('/upload-image', requireAuth, upload.single('image'), reportsController.uploadImage);
 router.get('/', attachUser, reportsController.list);
 router.get('/:id', attachUser, reportsController.getOne);
 router.post('/', requireAuth, createReportValidator, validate, reportsController.create);

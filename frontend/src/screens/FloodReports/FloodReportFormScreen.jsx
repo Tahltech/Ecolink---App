@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../../components/Header/Header';
 import Button from '../../components/Button/Button';
-import { createReport } from '../../services/reportApi';
+import { createReport, uploadReportImage } from '../../services/reportApi';
 import { CAMEROON_REGIONS } from '../../utils/cameroonRegions';
 import { SEVERITY_LEVELS, severityColor } from '../../utils/severity';
 import floodStyles from '../../styles/floodStyles';
@@ -76,10 +76,13 @@ const FloodReportFormScreen = ({ navigation }) => {
     }
     setSubmitting(true);
     try {
-      // Note: photo upload to Supabase Storage isn't wired yet, so the
-      // picked image stays local-only until that endpoint exists.
-      await createReport(form);
-      Alert.alert('Report submitted', 'Thank you — your flood report is now pending verification.');
+      let image_url;
+      if (photoUri) {
+        const uploadRes = await uploadReportImage(photoUri);
+        image_url = uploadRes.data?.url ?? uploadRes.url;
+      }
+      await createReport({ ...form, image_url });
+      Alert.alert('Report submitted', 'Thank you — your flood report is now live for others to see.');
       navigation.goBack();
     } catch (err) {
       setError(err.message);

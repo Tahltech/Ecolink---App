@@ -73,6 +73,14 @@ const remove = asyncHandler(async (req, res) => {
   return success(res, { message: 'Report deleted' });
 });
 
+const uploadImage = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError('No image file provided', 400);
+  const ext = (req.file.originalname || 'photo.jpg').split('.').pop();
+  const path = `${req.user.id}/${Date.now()}.${ext}`;
+  const url = await supabaseService.uploadFloodReportImage(path, req.file.buffer, req.file.mimetype);
+  return success(res, { url });
+});
+
 const updateStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   const valid = ['Verified', 'Rejected', 'Resolved', 'Pending'];
@@ -84,4 +92,4 @@ const updateStatus = asyncHandler(async (req, res) => {
   return success(res, { report });
 });
 
-module.exports = { list, myReports, getOne, create, update, remove, updateStatus };
+module.exports = { list, myReports, getOne, create, update, remove, updateStatus, uploadImage };
