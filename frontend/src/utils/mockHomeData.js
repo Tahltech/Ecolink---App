@@ -14,14 +14,25 @@ export const mockWeather = {
   airQuality: 58,
 };
 
-export const mockWidgets = (w) => [
-  { icon: 'thermometer-outline', label: 'Temperature', value: Math.round(w.temperature), unit: '°C' },
-  { icon: 'water-outline', label: 'Humidity', value: w.humidity, unit: '%' },
-  { icon: 'rainy-outline', label: 'Rain Chance', value: w.rainChance, unit: '%' },
-  { icon: 'flag-outline', label: 'Wind Speed', value: w.windSpeed, unit: ' km/h' },
-  { icon: 'sunny-outline', label: 'UV Index', value: w.uvIndex, unit: '' },
-  { icon: 'leaf-outline', label: 'Air Quality', value: w.airQuality, unit: ' AQI' },
-];
+// airQuality is a plain number in mock data but an { aqi, label, pm25 }
+// object once real weather data (weatherService.fetchAirQuality) replaces
+// it — normalize both shapes to a renderable value here.
+const airQualityDisplay = (aq) => {
+  if (aq && typeof aq === 'object') return { value: aq.label || aq.aqi || '--', unit: '' };
+  return { value: aq, unit: ' AQI' };
+};
+
+export const mockWidgets = (w) => {
+  const aq = airQualityDisplay(w.airQuality);
+  return [
+    { icon: 'thermometer-outline', label: 'Temperature', value: Math.round(w.temperature), unit: '°C' },
+    { icon: 'water-outline', label: 'Humidity', value: w.humidity, unit: '%' },
+    { icon: 'rainy-outline', label: 'Rain Chance', value: w.rainChance, unit: '%' },
+    { icon: 'flag-outline', label: 'Wind Speed', value: w.windSpeed, unit: ' km/h' },
+    { icon: 'sunny-outline', label: 'UV Index', value: w.uvIndex, unit: '' },
+    { icon: 'leaf-outline', label: 'Air Quality', value: aq.value, unit: aq.unit },
+  ];
+};
 
 export const mockAlerts = [
   { id: 'a1', type: 'Flood Alert', message: 'Heavy rainfall expected in Littoral within 24h.', icon: 'warning-outline' },

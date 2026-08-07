@@ -39,7 +39,7 @@ const create = asyncHandler(async (req, res) => {
     description,
     image_url,
     severity,
-    status: 'Pending',
+    status: 'Verified',
   });
   return success(res, { report }, 201);
 });
@@ -47,7 +47,9 @@ const create = asyncHandler(async (req, res) => {
 const update = asyncHandler(async (req, res) => {
   const existing = await supabaseService.getFloodReportById(req.params.id);
   if (existing.user_id !== req.user.id) throw new AppError('Forbidden', 403);
-  if (existing.status !== 'Pending') throw new AppError('Only pending reports can be edited', 400);
+  if (['Resolved', 'Rejected'].includes(existing.status)) {
+    throw new AppError('Resolved or rejected reports can no longer be edited', 400);
+  }
 
   const allowed = ['region', 'division', 'subdivision', 'village', 'latitude', 'longitude', 'description', 'image_url', 'severity'];
   const updates = {};
@@ -62,7 +64,9 @@ const update = asyncHandler(async (req, res) => {
 const remove = asyncHandler(async (req, res) => {
   const existing = await supabaseService.getFloodReportById(req.params.id);
   if (existing.user_id !== req.user.id) throw new AppError('Forbidden', 403);
-  if (existing.status !== 'Pending') throw new AppError('Only pending reports can be deleted', 400);
+  if (['Resolved', 'Rejected'].includes(existing.status)) {
+    throw new AppError('Resolved or rejected reports can no longer be deleted', 400);
+  }
   await supabaseService.deleteFloodReport(req.params.id);
   return success(res, { message: 'Report deleted' });
 });

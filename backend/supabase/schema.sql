@@ -236,10 +236,10 @@ create policy "flood_reports_insert_own" on public.flood_reports
   for insert with check (auth.uid() = user_id);
 drop policy if exists "flood_reports_update_own_pending" on public.flood_reports;
 create policy "flood_reports_update_own_pending" on public.flood_reports
-  for update using (auth.uid() = user_id and status = 'Pending');
+  for update using (auth.uid() = user_id and status not in ('Resolved', 'Rejected'));
 drop policy if exists "flood_reports_delete_own_pending" on public.flood_reports;
 create policy "flood_reports_delete_own_pending" on public.flood_reports
-  for delete using (auth.uid() = user_id and status = 'Pending');
+  for delete using (auth.uid() = user_id and status not in ('Resolved', 'Rejected'));
 
 -- Admin verification/rejection/resolution of flood reports is done via the
 -- backend using the Supabase service-role key (bypasses RLS). Add an

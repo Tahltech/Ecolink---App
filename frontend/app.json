@@ -13,6 +13,7 @@
       "backgroundColor": "#F7F5EA"
     },
     "android": {
+      "package": "com.tahltech.ecolink",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0E7A3D"
@@ -22,10 +23,14 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "API_BASE_URL": "http://172.18.83.33:4000/api"
+      "API_BASE_URL": "https://ecolink-backend-440y.onrender.com/api",
+      "eas": {
+        "projectId": "58d8b1fd-7f44-47b5-bb85-0c8d815fd60a"
+      }
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "owner": "tahltech"
   }
 }
