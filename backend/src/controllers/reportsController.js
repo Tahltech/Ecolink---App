@@ -1,6 +1,7 @@
 const { asyncHandler, success } = require('../utils/helpers');
 const { AppError } = require('../middleware/errorHandler');
 const supabaseService = require('../services/supabaseService');
+const notificationService = require('../services/notificationService');
 
 const list = asyncHandler(async (req, res) => {
   const verifiedOnly = req.query.verified === 'true';
@@ -41,6 +42,7 @@ const create = asyncHandler(async (req, res) => {
     severity,
     status: 'Verified',
   });
+  notificationService.notifyFloodReportVerified(report).catch(() => {});
   return success(res, { report }, 201);
 });
 
@@ -76,6 +78,9 @@ const updateStatus = asyncHandler(async (req, res) => {
   const valid = ['Verified', 'Rejected', 'Resolved', 'Pending'];
   if (!valid.includes(status)) throw new AppError('Invalid status', 400);
   const report = await supabaseService.updateFloodReport(req.params.id, { status });
+  if (status === 'Verified') {
+    notificationService.notifyFloodReportVerified(report).catch(() => {});
+  }
   return success(res, { report });
 });
 

@@ -12,6 +12,7 @@ import NewsCard from '../../components/NewsCard/NewsCard';
 import ClimateCard from '../../components/ClimateCard/ClimateCard';
 import { getCurrentWeather } from '../../services/weatherApi';
 import { getNews } from '../../services/newsApi';
+import { getReports } from '../../services/reportApi';
 import colors from '../../styles/colors';
 import typography from '../../styles/typography';
 import homeStyles from '../../styles/homeStyles';
@@ -19,7 +20,6 @@ import { spacing } from '../../styles/spacing';
 import {
   mockWeather,
   mockWidgets,
-  mockAlerts,
   mockTip,
   mockFact,
   mockClothing,
@@ -54,6 +54,7 @@ const HomeScreen = ({ navigation }) => {
   const [weather, setWeather] = useState(mockWeather);
   const [news, setNews] = useState(FALLBACK_ARTICLES.slice(0, 3));
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
+  const [alerts, setAlerts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadWeather = useCallback(async () => {
@@ -77,12 +78,23 @@ const HomeScreen = ({ navigation }) => {
     }
   }, []);
 
+  const loadAlerts = useCallback(async () => {
+    try {
+      const res = await getReports({ verified: 'true' });
+      const reports = res.data?.reports ?? res.reports ?? [];
+      setAlerts(reports.slice(0, 3));
+    } catch {
+      // Keep showing whatever alerts we already had.
+    }
+  }, []);
+
   useEffect(() => {
     loadWeather();
     loadNews();
+    loadAlerts();
     const interval = setInterval(loadNews, NEWS_REFRESH_MS);
     return () => clearInterval(interval);
-  }, [loadWeather, loadNews]);
+  }, [loadWeather, loadNews, loadAlerts]);
 
   // Ask permission once, with a plain-language reason, before the OS
   // dialog — location drives hyper-local weather, flood risk, and tips.
@@ -103,7 +115,7 @@ const HomeScreen = ({ navigation }) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadWeather(), loadNews()]);
+    await Promise.all([loadWeather(), loadNews(), loadAlerts()]);
     setRefreshing(false);
   };
 
@@ -163,18 +175,33 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       <View style={homeStyles.section}>
-        <Text style={[typography.h3, homeStyles.sectionTitle]}>Alerts</Text>
-        {mockAlerts.map((alert) => (
-          <View key={alert.id} style={homeStyles.alertBanner}>
-            <View style={homeStyles.alertIconWrap}>
-              <Ionicons name={alert.icon} size={22} color={colors.severityHigh} />
+        <View style={homeStyles.sectionHeaderRow}>
+          <Text style={[typography.h3, homeStyles.sectionTitle]}>Alerts</Text>
+          <TouchableOpacity onPress={() => navigation?.navigate('Reports')}>
+            <Text style={[typography.bodySmall, homeStyles.seeAll]}>See all</Text>
+          </TouchableOpacity>
+        </View>
+        {alerts.length ? (
+          alerts.map((report) => (
+            <View key={report.id} style={homeStyles.alertBanner}>
+              <View style={homeStyles.alertIconWrap}>
+                <Ionicons name="warning-outline" size={22} color={colors.severityHigh} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[typography.bodySmall, homeStyles.alertType]}>
+                  {report.severity} Flood — {report.region}
+                </Text>
+                <Text style={[typography.caption, homeStyles.alertMessage]} numberOfLines={2}>
+                  {report.description || `Reported near ${report.village || report.subdivision || report.region}.`}
+                </Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[typography.bodySmall, homeStyles.alertType]}>{alert.type}</Text>
-              <Text style={[typography.caption, homeStyles.alertMessage]}>{alert.message}</Text>
-            </View>
-          </View>
-        ))}
+          ))
+        ) : (
+          <Text style={[typography.bodySmall, { color: colors.light.textSecondary }]}>
+            No active flood alerts right now.
+          </Text>
+        )}
       </View>
 
       <View style={homeStyles.section}>

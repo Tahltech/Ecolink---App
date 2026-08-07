@@ -63,6 +63,45 @@ const notifyNewArticle = async (userId, article) => {
 };
 
 /**
+ * Broadcasts a verified flood report to every user in the same region —
+ * in-app notification for all of them, plus a real push notification for
+ * whoever has registered a device token. Scoped to the report's region
+ * rather than truly everyone, so a flood in the Far North doesn't page
+ * someone in the Littoral.
+ */
+const notifyFloodReportVerified = async (report) => {
+  const users = await supabaseService.getUsersForDailyTips();
+  const affected = users.filter((u) => u.region === report.region && u.id !== report.user_id);
+  if (!affected.length) return { usersNotified: 0, pushSent: 0 };
+
+  const title = `Flood Alert — ${report.region}`;
+  const location = report.village || report.subdivision || report.region;
+  const message = `A ${(report.severity || '').toLowerCase()} severity flood was reported near ${location}. Stay alert and avoid low-lying areas.`;
+
+  const pushMessages = [];
+  for (const user of affected) {
+    // eslint-disable-next-line no-await-in-loop
+    await supabaseService.createNotification({
+      userId: user.id,
+      title,
+      message,
+      type: 'flood',
+      region: report.region,
+    });
+    if (user.push_token) {
+      pushMessages.push({ token: user.push_token, title, body: message, data: { type: 'flood', reportId: report.id } });
+    }
+  }
+
+  const pushResult = pushMessages.length
+    ? await pushService.sendPushNotifications(pushMessages)
+    : { sent: 0, skipped: 0 };
+
+  logger.info('Flood alert broadcast', { region: report.region, usersNotified: affected.length, pushSent: pushResult.sent });
+  return { usersNotified: affected.length, pushSent: pushResult.sent };
+};
+
+/**
  * Daily job: for every user with a known region, create an in-app
  * notification with that day's regional climate-improvement tip, and send
  * a real push notification if they've registered a device token. Tapping
@@ -102,4 +141,10 @@ const sendDailyClimateTips = async () => {
   return { usersNotified: created, pushSent: pushResult.sent };
 };
 
-module.exports = { generateWeatherAlerts, notifyClimateTip, notifyNewArticle, sendDailyClimateTips };
+module.exports = {
+  generateWeatherAlerts,
+  notifyClimateTip,
+  notifyNewArticle,
+  notifyFloodReportVerified,
+  sendDailyClimateTips,
+};

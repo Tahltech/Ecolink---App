@@ -34,11 +34,6 @@ export const mockWidgets = (w) => {
   ];
 };
 
-export const mockAlerts = [
-  { id: 'a1', type: 'Flood Alert', message: 'Heavy rainfall expected in Littoral within 24h.', icon: 'warning-outline' },
-  { id: 'a2', type: 'Heat Alert', message: 'Extreme heat warning for Far North region.', icon: 'flame-outline' },
-];
-
 export const mockNews = [
   {
     id: 'n1',
