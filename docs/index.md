@@ -71,7 +71,7 @@ You can:
 - Disable push notifications at any time via your device settings
 - Request access to, correction of, or deletion of your account data by contacting us (see below)
 
-To request deletion of your account and associated data, email us at the address below with the subject "Account Deletion Request."
+To request deletion of your account and associated data, see our [Account & Data Deletion](./account-deletion.md) page for instructions.
 
 ## 6. Children's Privacy
 
